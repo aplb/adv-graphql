@@ -10,27 +10,37 @@ describe('Project', () => {
   describe('resolvers', () => {
     describe('project', () => {
       test('should resolve correctly', async () => {
-        const project = await db.models.project.create({name: 'test'})
-        const result = await projectResolvers.Query
-          .project(null, {input: {id: project._id}}, {models: db.models})
-        
-        expect(result._id + '').toBe(project._id + '')
+        const input = { name: 'test', description: 'test' }
+
+        const result = await projectResolvers.Mutation.newProject(
+          {},
+          { input },
+          {
+            models: {
+              project: db.models.project
+            }
+          })
+          
+          expect(result).toBeDefined()
+          expect(result.name).toEqual(input.name)
+          expect(result.description).toEqual(input.description)
       })
 
       test('should have correct query', async () => {
-        const project = await db.models.project.create({name: 'test'})
-        const input = {input: {id: project._id}}
-        const query = `
-          query Project($input: ProjectInput!){
-            project(input: $input) {
-              id
+        const input = { name: 'test', description: 'test' }
+
+        const { data, errors } = await runQuery(`
+          mutation test($input: NewProjectInput!) {
+            newProject (input: $input) {
               name
+              description
             }
           }
-        `
-        const {data, errors} = await runQuery(query, input)
-        expect(errors).toBeUndefined
-        expect(data.project.id).toBe(project._id + '')
+        `, { input })
+
+        expect(errors).toBeUndefined()
+        expect(data.newProject.name).toEqual(input.name)
+        expect(data.newProject.description).toEqual(input.description)
       })
     })
   })
